@@ -30,7 +30,7 @@ reps_in_parallel: 20
 wandb:
   project: *name
   group: training
-  entity: gelikit
+  entity: klee863
   log_interval:  &interval 20
   log_model: true
   model_name: test_model_name

@@ -17,7 +17,7 @@ sbatch_args: # gpus need to be explicitly requested using this
 name: &name robot_push_prodmp
 
 # Required: Can also be set in DEFAULT
-path: /tmp/result/robot_push_prodmp   # path for saving the results
+path: nmp/results/robot_push_prodmp   # path for saving the results
 repetitions: 1    # number of repeated runs for each parameter combination
 
 # Required for AbstractIterativeExperiments only. Can also be set in DEFAULT
@@ -31,7 +31,7 @@ reps_in_parallel: 20
 wandb:
   project: robot_push_prodmp
   group: *name
-  entity: gelikit
+  entity: klee863
   log_interval:  &interval 20
   log_model: true
   model_name: model

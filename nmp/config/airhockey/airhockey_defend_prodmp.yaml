@@ -1,8 +1,8 @@
----gelikit
+---
 # Slurm config bwuni gpu
 name: "SLURM"   # MUST BE "SLURM"
 partition: "gpu"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
-job-name: "robot_push_cnmp" # this will be the experiment's name in slurm
+job-name: "airhockey_defend_prodmp" # this will be the experiment's name in slurm
 num_parallel_jobs: 20  # max number of jobs executed in parallel
 ntasks: 1   #  leave that like it is
 cpus-per-task: 2   # there are 10 cores for each GPU
@@ -14,10 +14,10 @@ sbatch_args: # gpus need to be explicitly requested using this
 
 
 ---
-name: &name robot_push_cnmp
+name: &name airhockey_defend_prodmp
 
 # Required: Can also be set in DEFAULT
-path: /tmp/result/robot_push_cnmp   # path for saving the results
+path: nmp/results/airhockey_defend_prodmp   # path for saving the results
 repetitions: 1    # number of repeated runs for each parameter combination
 
 # Required for AbstractIterativeExperiments only. Can also be set in DEFAULT
@@ -29,7 +29,7 @@ reps_per_job: 1    # number of repetitions in each job. useful for paralellizati
 reps_in_parallel: 20
 
 wandb:
-  project: robot_push_cnmp
+  project: airhockey_defend_prodmp
   group: *name
   entity: klee863
   log_interval:  &interval 20
@@ -49,30 +49,35 @@ params:
 
   encoders:
     ctx:
-      type: CNMPEncoderMlp
+      type: ProNMPEncoderMlp
       args:
-        dim_obs: 8
+        dim_obs: 13  # puck pos + vel (6) + joint pos + vel (6) + time (1)
         dim_lat: *dim_lat
         obs_hidden:
+          avg_neuron: 128
+          num_hidden: 3
+          shape: 0.0
+        unc_hidden:
           avg_neuron: 128
           num_hidden: 3
           shape: 0.0
         act_func: *act_func
 
   aggregator:
-    type: MeanAggregator
+    type: BayesianAggregator
     args:
       dim_lat: *dim_lat
       multiple_steps: false
       prior_mean: 0.0
+      prior_var: 1
 
   decoder:
-    type: CNPDecoder
+    type: PBDecoder
     args:
-      dim_add_in: 1
-      dim_val: 2
+      dim_add_in: 0
+      dim_val: 78   # basis fns * dof + dof
       dim_lat: *dim_lat
-      std_only: true
+      std_only: false
       mean_hidden:
         avg_neuron: 128
         num_hidden: 3
@@ -83,8 +88,11 @@ params:
         shape: 0.0
       act_func: *act_func
 
-  dataset:
-    name: robot_push
+  dataset:  # change this
+    task: airhockey_defend
+    dataset_name: straight_1000_pose_sv_w_preference_subset
+    max_path_length: 250
+    horizon: 100
     partition:
       train: 0.7
       validate: 0.2
@@ -94,22 +102,29 @@ params:
     shuffle_train_loader: True
     transform: null
     time_min: 0
-    time_max: 3
+    time_max: 2
     save_type: tensor
     data:
-      object_pos_ori:
+      states:
         time_dependent: true
-      des_cart_pos_vel:
+      joint_pos_and_vel:
         time_dependent: true
-      box_robot_state:
-        time_dependent: true
-      file_index:
-        time_dependent: false
-        normalize: false
+
+  mp:
+    num_dof: 3
+    tau: 0.5
+    mp_type: prodmp
+    mp_args:
+      alpha_phase: 0.5
+      num_basis: 25
+      basis_bandwidth_factor: 3
+      num_basis_outside: 0
+      alpha: 25
+      dt: 0.02
 
   assign_config:
     num_ctx_min: 1
     num_ctx_max: 10
-    pred_range_min: 50
-    pred_range_max: 50
+    pred_range_min: 30
+    pred_range_max: 30
 

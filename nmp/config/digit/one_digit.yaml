@@ -15,7 +15,7 @@ sbatch_args: # gpus need to be explicitly requested using this
 name: &name "pronmp_one_digit"
 
 # Required: Can also be set in DEFAULT
-path: /tmp/result/one_digit   # path for saving the results
+path: nmp/results/one_digit   # path for saving the results
 repetitions: 1    # number of repeated runs for each parameter combination
 
 # Required for AbstractIterativeExperiments only. Can also be set in DEFAULT
@@ -29,7 +29,7 @@ reps_in_parallel: 1
 wandb:
   project: *name
   group: training
-  entity: gelikit
+  entity: klee863
   log_interval:  &interval 20
   log_model: true
   model_name: test_model_name

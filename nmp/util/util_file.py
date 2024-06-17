@@ -11,6 +11,7 @@ from typing import Union
 
 import numpy as np
 import yaml
+import pickle
 from natsort import os_sorted
 
 import nmp.util as util
@@ -294,5 +295,41 @@ def load_npz_dataset(dataset_name: str, name: str = None) -> dict:
     for key, value in data_dict.items():
         if value.shape == ():
             data_dict[key] = value.item()
+
+    return data_dict
+
+def load_pkl_dataset(dataset_name: str, name: str = None,
+                    max_path_length: int = 250, horizon: int = 100, dt: float = 0.02) -> dict:
+    if name is None:
+        name = dataset_name
+    load_dir = get_dataset_dir(dataset_name)
+    load_path = join_path(load_dir, name + ".pkl")
+    print("Loading pickle file: ", load_path)
+    with open(load_path, 'rb') as f:
+        data = pickle.load(f)
+
+        states_all = []
+        for traj in data:
+            states = np.array([t[0] for t in traj])
+            preferences = traj[0][6]  # all preferences are the same per trajectory (unused here)
+
+            path_length = len(states)
+            if path_length > max_path_length:
+                raise ValueError(
+                    f"Path length: {path_length} is greater than max trajectory length: {self.max_path_length}")
+
+            if horizon > path_length:
+                # pad all the trajectories up to the horizon length at least
+                states = np.pad(states, ((0, horizon - path_length), (0, 0)), 'edge')
+            elif horizon < path_length:
+                # truncate the data outside of horizon
+                states = states[:horizon]
+
+            states_all.append(states)
+    states = np.array(states_all)
+
+    times = np.tile(np.arange(0, states.shape[1])*dt, (states.shape[0], 1))
+    data_dict = {'states': {'time': times, 'value': states},
+                 'joint_pos_and_vel': {'time': times, 'value': states[..., 6:]}}
 
     return data_dict

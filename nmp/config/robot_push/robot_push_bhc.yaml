@@ -31,7 +31,7 @@ reps_in_parallel: 20
 wandb:
   project: robot_push_bhc
   group: *name
-  entity: gelikit
+  entity: klee863
   log_interval: &interval 20
   log_model: true
   model_name: model
