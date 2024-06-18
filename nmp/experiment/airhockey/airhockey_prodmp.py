@@ -111,7 +111,7 @@ class AirhockeyDefend(experiment.AbstractIterativeExperiment):
         start_obs_idx_max = 100 - num_ctx - 10
         start_obs_idx = torch.randint(0, start_obs_idx_max + 1, [],
                                       dtype=torch.long)
-        start_obs_idx = 0 # TODO: remove
+        # start_obs_idx = 0 # TODO: remove
         ctx_index = torch.arange(start_obs_idx, start_obs_idx + num_ctx, step=1,
                                  dtype=torch.long)
         pred_index_max = min(99, ctx_index[-1] + 1 + pred_range)

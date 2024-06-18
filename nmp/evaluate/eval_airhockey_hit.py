@@ -478,8 +478,13 @@ def main():
     successes = 0
     total = 100
 
-    env = AirHockeyChallengeWrapper(env="3dof-hit", interpolation_order=3, debug=False)
-    
+    if 'hit' in exp_dir:
+        task = 'hit'
+        env = AirHockeyChallengeWrapper(env="3dof-hit", interpolation_order=3, debug=False)
+    elif 'defend' in exp_dir:
+        task = 'defend'
+        env = AirHockeyChallengeWrapper(env="3dof-defend", interpolation_order=3, debug=False)
+
     render_path = "videos/hard_v2"
     # check if the directory exists
     if not os.path.exists(render_path):
@@ -491,17 +496,18 @@ def main():
                         seed=seed,
                         model_path=model_dir,
                         model_epoch=10000,
-                        replan_horizon=10)
+                        replan_horizon=30)
 
     # sample a starting configuration from the data distribution
     dataset_path = os.path.join("nmp/dataset", params["dataset"]["task"], params["dataset"]["dataset_name"]) + '.pkl'
     traj_list = []
     load_demo_data(traj_list, dataset_path, num_traj_to_load=total)
     # demo_init_state, demo_actions, preference = sample_demo_data(traj_list)
-    demo_init_state = traj_list[0][0][0]
+
 
     for n in range(total):
         current_traj = []
+        demo_init_state = traj_list[n][0][0]
         obs = env.reset(demo_init_state.copy())
         current_traj.append(obs.copy())
         agent.init_puck_tracker(obs)
@@ -542,10 +548,13 @@ def main():
         print("Collected Trajectory: ", num_trajs)
         print(len(frames))
 
-        hit, ee_pos = success_defend(current_traj, agent)
-        successes += hit
-
-        print("Hit: ", hit)
+        if task == 'hit':
+            if info['success']:
+                successes += 1
+        elif task == 'defend':
+            hit, ee_pos = success_defend(current_traj, agent)
+            successes += hit
+            print("Hit: ", hit)
 
         if render:
             current_traj = np.vstack(current_traj)
@@ -569,10 +578,8 @@ def main():
             save_video(frames, f"{render_path}/{n}.mp4", fps=30, size=(1600,1200))
             # trajs.append(current_traj.copy())
         steps = 0
-        current_traj = []
-        obs = env.reset()
 
-    save_success_rate(successes, total, 100, loadpath)
+    # save_success_rate(successes, total, 100, loadpath)
     # if render:
     #     save_video(frames, f"videos/defender/all_trajs.mp4", fps=30, size=(1600,1200))
 
