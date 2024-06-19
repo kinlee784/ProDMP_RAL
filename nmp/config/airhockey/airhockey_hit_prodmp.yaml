@@ -2,7 +2,7 @@
 # Slurm config bwuni gpu
 name: "SLURM"   # MUST BE "SLURM"
 partition: "gpu"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
-job-name: "airhockey_defend_prodmp" # this will be the experiment's name in slurm
+job-name: "airhockey_hit_prodmp" # this will be the experiment's name in slurm
 num_parallel_jobs: 20  # max number of jobs executed in parallel
 ntasks: 1   #  leave that like it is
 cpus-per-task: 2   # there are 10 cores for each GPU
