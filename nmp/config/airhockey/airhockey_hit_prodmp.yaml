@@ -54,11 +54,11 @@ params:
         dim_obs: 13  # puck pos + vel (6) + joint pos + vel (6) + time (1)
         dim_lat: *dim_lat
         obs_hidden:
-          avg_neuron: 128
+          avg_neuron: 64
           num_hidden: 3
           shape: 0.0
         unc_hidden:
-          avg_neuron: 128
+          avg_neuron: 64
           num_hidden: 3
           shape: 0.0
         act_func: *act_func
@@ -75,15 +75,15 @@ params:
     type: PBDecoder
     args:
       dim_add_in: 0
-      dim_val: 78   # basis fns * dof + dof
+      dim_val: 30   # basis fns * dof + dof
       dim_lat: *dim_lat
       std_only: false
       mean_hidden:
-        avg_neuron: 128
+        avg_neuron: 64
         num_hidden: 3
         shape: 0.0
       variance_hidden:
-        avg_neuron: 128
+        avg_neuron: 64
         num_hidden: 3
         shape: 0.0
       act_func: *act_func
@@ -116,7 +116,7 @@ params:
     mp_type: prodmp
     mp_args:
       alpha_phase: 0.5
-      num_basis: 25
+      num_basis: 9
       basis_bandwidth_factor: 3
       num_basis_outside: 0
       alpha: 25
@@ -124,7 +124,7 @@ params:
 
   assign_config:
     num_ctx_min: 1
-    num_ctx_max: 10
-    pred_range_min: 30
-    pred_range_max: 30
+    num_ctx_max: 1
+    pred_range_min: 50
+    pred_range_max: 50
 

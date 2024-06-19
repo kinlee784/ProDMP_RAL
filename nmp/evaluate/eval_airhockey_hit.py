@@ -128,7 +128,7 @@ class ProDMPAgent(AgentBase):
 
         # bookkeeping information for the agent
         self.dt = params["mp"]["mp_args"]["dt"]
-        self.max_ctx_len = 4#params["assign_config"]["num_ctx_max"]
+        self.max_ctx_len = 1#params["assign_config"]["num_ctx_max"]
         self.replan_horizon = replan_horizon
         self.sample_batch_size = sample_batch_size
 
@@ -150,8 +150,8 @@ class ProDMPAgent(AgentBase):
         action = self.action_buffer[self.plan_idx]
         self.plan_idx += 1
         if self.plan_idx >= self.replan_horizon:
-            self.plan_idx = 0
-
+            # self.plan_idx = 0  # TODO: remove below and uncomment this to get replanning running again
+            self.plan_idx -= 1
         self.curr_ep_time += self.dt
 
         return action
@@ -190,7 +190,7 @@ class ProDMPAgent(AgentBase):
         L = L.squeeze(-3)
         assert mean.ndim == 3
 
-        pred_time = (torch.arange(start=0, end=30)*self.dt).to("cuda")
+        pred_time = (torch.arange(start=0, end=self.replan_horizon)*self.dt).to("cuda")
         num_pred_time = 1
         num_agg = 1
 
@@ -496,7 +496,7 @@ def main():
                         seed=seed,
                         model_path=model_dir,
                         model_epoch=10000,
-                        replan_horizon=30)
+                        replan_horizon=50)
 
     # sample a starting configuration from the data distribution
     dataset_path = os.path.join("nmp/dataset", params["dataset"]["task"], params["dataset"]["dataset_name"]) + '.pkl'
@@ -510,6 +510,7 @@ def main():
         demo_init_state = traj_list[n][0][0]
         obs = env.reset(demo_init_state.copy())
         current_traj.append(obs.copy())
+        agent.reset()
         agent.init_puck_tracker(obs)
         agent.update_puck_tracker(obs)
         # first actions should be empty to get the puck trajectory
@@ -527,7 +528,6 @@ def main():
         # actions = agent.sample_actions(obs, puck_pred_states, savepath=f"{render_path}/traj_{n}.png", render=render)
 
         steps = 0
-        num_trajs = 0
         trajs_needed = 20
         trajs = []
         current_traj = []
@@ -545,12 +545,12 @@ def main():
                 img = env.render(record=True)
                 frames.append(img)
 
-        print("Collected Trajectory: ", num_trajs)
-        print(len(frames))
+        # print(len(frames))
 
         if task == 'hit':
             if info['success']:
                 successes += 1
+            print(f"Success rate: {(successes/(n+1))*100}% ({successes}/{n+1})")
         elif task == 'defend':
             hit, ee_pos = success_defend(current_traj, agent)
             successes += hit
@@ -577,7 +577,6 @@ def main():
         if render_video:
             save_video(frames, f"{render_path}/{n}.mp4", fps=30, size=(1600,1200))
             # trajs.append(current_traj.copy())
-        steps = 0
 
     # save_success_rate(successes, total, 100, loadpath)
     # if render:
